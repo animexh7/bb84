@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#07090d">
+  <title>BB84 Rx: quantum key distribution for pharmaceutical data</title>
+  <meta name="description" content="An interactive BB84 simulator that shows how an R&amp;D lab and a manufacturing site can share a secret key, catch a counterfeiter on the line, and lock formulation data with it.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/styles.css">
+  <script>document.documentElement.classList.add("js");</script>
+</head>
+<body>
+  <div class="progress" id="progress" aria-hidden="true"></div>
+  <nav class="topbar" aria-label="Primary">
+    <a class="brand" href="#top" aria-label="BB84 Rx, back to top">
+      <svg class="brand-mark" viewBox="0 0 32 32" width="28" height="28" aria-hidden="true"><g transform="rotate(-35 16 16)"><path d="M9 10h7v12H9a6 6 0 0 1 0-12Z" fill="#3d5afe"/><path d="M16 10h7a6 6 0 0 1 0 12h-7Z" fill="#ff6a4d"/></g></svg>
+      <span>BB84 Rx</span>
+    </a>
+    <div class="topbar-links"><a href="#console">Run it</a><a href="#lab">How it works</a><a href="#vault">Vault</a></div>
+  </nav>
+  
+
+  <!-- ============ HERO ============ -->
+  <header class="hero" id="top">
+    <div class="stage" id="stage">
+      <div id="veilRoot" class="veil-root"></div>
+      <div class="stage-ui">
+        <div class="stage-left">
+          <p class="eyebrow">A BB84 simulator for pharmaceutical tech transfer</p>
+          <p class="lede">Watch an R&amp;D lab and a manufacturing site agree on a secret key using single photons. Put a counterfeiter on the line and see the error rate give them away. Then lock real formulation data with the key.</p>
+          <div class="hero-actions">
+            <a class="btn btn-primary magnetic" href="#console">Start the simulation</a>
+            <a class="btn btn-ghost" href="#lab">See how it works</a>
+          </div>
+        </div>
+        <ul class="stage-meta" aria-label="Key facts">
+          <li><b>2,048</b><span>photons per run</span></li>
+          <li><b>11%</b><span>QBER ceiling</span></li>
+          <li><b>AES-256</b><span>GCM vault</span></li>
+        </ul>
+        <p class="stage-hint" aria-hidden="true">Drag to rotate &middot; hover to reveal &middot; click to split</p>
+      </div>
+    </div>
+    <h1 class="sr-only">BB84 Rx: send a formula nobody can read in transit</h1>
+    <div id="titleRoot" class="title-root"></div>
+  </header>
+
+  <main>
+    <section class="manifesto" aria-label="Why it works">
+      <div class="ascii-bg" id="asciiA" aria-hidden="true"></div>
+      <div class="velocity-wrap" id="velocityA" aria-hidden="true"></div>
+      <p class="manifesto-copy">A photon can&rsquo;t be copied. Anyone who looks at it changes it. <em>That change is the alarm.</em></p>
+    </section>
+
+    <!-- ============ CONSOLE ============ -->
+    <section class="console" id="console" aria-label="Simulation controls">
+      <div class="console-inner">
+        <div class="console-status">
+          <h2 class="console-title">Run a transfer</h2>
+          <p id="statusText" role="status" aria-live="polite">Ready to initialize the simulation.</p>
+        </div>
+
+        <div class="console-controls">
+          <label class="switch" for="interceptToggle">
+            <input type="checkbox" id="interceptToggle">
+            <span class="switch-ui" aria-hidden="true"></span>
+            <span class="switch-text">
+              <strong>Counterfeiter on the line</strong>
+              <small>Intercepts and re-sends every photon</small>
+            </span>
+          </label>
+          <button id="generateKeyButton" class="btn btn-primary magnetic" type="button">Generate secure key</button>
+        </div>
+
+        <div class="steps" aria-label="Simulation progress">
+          <div class="step" id="stepGeneration"><span class="step-dot"></span><span class="step-name">Key bits</span></div>
+          <div class="step" id="stepEncoding"><span class="step-dot"></span><span class="step-name">Encoding</span></div>
+          <div class="step" id="stepMeasurement"><span class="step-dot"></span><span class="step-name">Transmit and measure</span></div>
+          <div class="step" id="stepSifting"><span class="step-dot"></span><span class="step-name">Sifting</span></div>
+          <div class="step" id="stepVerification"><span class="step-dot"></span><span class="step-name">Verification</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ CHAPTER 1: LAB ============ -->
+    <section class="chapter" id="lab">
+      <div class="glow glow-blue" data-parallax="-.22" aria-hidden="true"></div>
+      <div class="chapter-copy">
+        <p class="eyebrow"><strong>R&amp;D laboratory</strong><span>Chapter 1 of 5</span></p>
+        <h2 class="h2" data-split="reveal">What does the lab send?</h2>
+        <p>
+          The lab draws random bits. For each one it picks a basis, Z or X, and sends a single photon
+          in the state that bit and basis define.
+        </p>
+        <p class="chapter-next">Next: the plant has to guess how to read them.</p>
+      </div>
+
+      <div class="chapter-body">
+        <div class="bay">
+          <div class="bay-head">
+            <h3>Prepare and transmit</h3>
+            <ul class="legend" aria-label="Colour key">
+              <li><span class="bit-token basis-z">Z</span> Z basis</li>
+              <li><span class="bit-token basis-x">X</span> X basis</li>
+              <li><span class="bit-token photon-token">|0⟩</span> Photon</li>
+            </ul>
+          </div>
+
+          <div class="blister">
+            <div class="pocket">
+              <h4>1. Random bits</h4>
+              <div id="animatedBits" class="bit-strip" aria-live="polite">
+                <span class="animation-placeholder">Waiting...</span>
+              </div>
+            </div>
+            <div class="pocket">
+              <h4>2. Preparation bases</h4>
+              <div id="animatedBases" class="bit-strip" aria-live="polite">
+                <span class="animation-placeholder">Waiting...</span>
+              </div>
+            </div>
+            <div class="pocket">
+              <h4>3. Encoded photons</h4>
+              <div id="animatedPhotons" class="bit-strip" aria-live="polite">
+                <span class="animation-placeholder">Waiting...</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="channel" id="channel" data-tapped="false" aria-label="Photon transmission from the R&amp;D lab to the manufacturing site">
+            <div class="node">
+              <span class="node-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2M8.5 2h7M7 16h10"/></svg>
+              </span>
+              <strong>R&amp;D lab</strong>
+            </div>
+
+            <div class="photon-track">
+              <div class="channel-label" id="photonStatus">Waiting to transmit photons</div>
+              <div class="photon-rail">
+                <span class="tap" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6"/></svg>
+                </span>
+                <span class="photon" id="travellingPhoton" aria-hidden="true"></span>
+              </div>
+            </div>
+
+            <div class="node">
+              <span class="node-icon node-plant" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8l-7 5V8l-7 5V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2ZM17 18h1M12 18h1M7 18h1"/></svg>
+              </span>
+              <strong>Manufacturing site</strong>
+            </div>
+          </div>
+          <p class="note animation-caption" id="labAnimationStatus" aria-live="polite">
+            Generate a secure key to start the animation.
+          </p>
+        </div>
+
+        <div class="records">
+          <div>
+            <h3>Generated bits</h3>
+            <div class="data" id="bits" tabindex="0" role="region" aria-label="Generated bits">—</div>
+          </div>
+          <div>
+            <h3>Preparation bases</h3>
+            <div class="data" id="bases" tabindex="0" role="region" aria-label="Preparation bases">—</div>
+          </div>
+          <div class="span-2">
+            <h3>Encoded states</h3>
+            <p class="note">Z basis uses |0⟩ and |1⟩. X basis uses |+⟩ and |−⟩.</p>
+            <div class="data" id="photons" tabindex="0" role="region" aria-label="Encoded states">—</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ CHAPTER 2: PLANT ============ -->
+    <section class="chapter" id="plant">
+      <div class="glow glow-violet" data-parallax="-.2" aria-hidden="true"></div>
+      <div class="chapter-copy">
+        <p class="eyebrow"><strong>Manufacturing site</strong><span>Chapter 2 of 5</span></p>
+        <h2 class="h2" data-split="reveal">What reaches the plant?</h2>
+        <p>
+          The plant doesn't know which basis the lab used, so it guesses one for every photon.
+          A right guess returns the lab's bit. A wrong guess returns a coin flip.
+        </p>
+        <p>
+          With a counterfeiter on the line, these are the photons they re-sent, not the lab's originals.
+        </p>
+        <p class="chapter-next">Only the lucky guesses are worth keeping.</p>
+      </div>
+
+      <div class="chapter-body">
+        <div class="bay bay-plant">
+          <div class="bay-head"><h3>Receive and measure</h3></div>
+          <div class="blister">
+            <div class="pocket">
+              <h4>1. Incoming photons</h4>
+              <div id="plantAnimatedPhotons" class="bit-strip" aria-live="polite">
+                <span class="animation-placeholder">Waiting...</span>
+              </div>
+            </div>
+            <div class="pocket">
+              <h4>2. Measurement bases</h4>
+              <div id="plantAnimatedBases" class="bit-strip" aria-live="polite">
+                <span class="animation-placeholder">Waiting...</span>
+              </div>
+            </div>
+            <div class="pocket">
+              <h4>3. Measured bits</h4>
+              <div id="plantAnimatedBits" class="bit-strip" aria-live="polite">
+                <span class="animation-placeholder">Waiting...</span>
+              </div>
+            </div>
+          </div>
+          <p class="note animation-caption" id="plantAnimationStatus" aria-live="polite">
+            Waiting for photons from the R&amp;D lab.
+          </p>
+        </div>
+
+        <div class="records">
+          <div>
+            <h3>Measurement bases</h3>
+            <div class="data" id="plantBases" tabindex="0" role="region" aria-label="Measurement bases">—</div>
+          </div>
+          <div>
+            <h3>Measured bits</h3>
+            <div class="data" id="plantKey" tabindex="0" role="region" aria-label="Measured bits">—</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ CHAPTER 3: SIFT ============ -->
+    <section class="chapter" id="sift">
+      <div class="glow glow-coral" data-parallax="-.18" aria-hidden="true"></div>
+      <div class="chapter-copy">
+        <p class="eyebrow"><strong>Key sifting</strong><span>Chapter 3 of 5</span></p>
+        <h2 class="h2" data-split="reveal">Which bits can both sites trust?</h2>
+        <p>
+          Over an open line the two sites compare bases, never bits. Positions where the bases
+          agree are kept. The rest are discarded.
+        </p>
+        <p class="chapter-next">Keeping them isn't enough. They still have to be checked.</p>
+      </div>
+
+      <div class="chapter-body">
+        <div class="records">
+          <div>
+            <h3>Matching positions</h3>
+            <div class="data" id="matchingPositions" tabindex="0" role="region" aria-label="Matching positions">—</div>
+          </div>
+          <div>
+            <h3>Sifted key</h3>
+            <div class="data" id="siftedKey" tabindex="0" role="region" aria-label="Sifted key">—</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ CHAPTER 4: VERIFY ============ -->
+    <section class="chapter" id="verify">
+      <div class="glow glow-blue" data-parallax="-.2" aria-hidden="true"></div>
+      <div class="chapter-copy">
+        <p class="eyebrow"><strong>Key verification</strong><span>Chapter 4 of 5</span></p>
+        <h2 class="h2" data-split="reveal">Did anyone listen in?</h2>
+        <p>
+          The sites reveal a random half of the sifted key and count mismatches. Anyone who measures
+          a photon disturbs it, and that disturbance shows up as errors.
+        </p>
+        <p class="chapter-next">A key that passes can lock the formulation.</p>
+      </div>
+
+      <div class="chapter-body">
+        <div class="bay">
+          <dl class="ledger">
+            <div><dt>Sifted key length</dt><dd class="mono" id="siftedKeyLength">—</dd></div>
+            <div><dt>Sample size</dt><dd class="mono" id="sampleSize">—</dd></div>
+            <div><dt>Sample matches</dt><dd class="mono" id="matchingBits">—</dd></div>
+            <div><dt>Estimated QBER</dt><dd class="mono" id="qberValue">—</dd></div>
+            <div><dt>Remaining key length</dt><dd class="mono" id="remainingKeyLength">—</dd></div>
+          </dl>
+
+          <div class="qber-panel">
+            <div class="qber-heading">
+              <strong>Quantum bit error rate</strong>
+              <span id="qberIndicatorLabel">Waiting for results</span>
+            </div>
+            <div class="qber-track" id="qberTrack" role="progressbar"
+                 aria-label="Quantum bit error rate" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+              <div id="qberBarFill" class="qber-fill"></div>
+              <span class="qber-threshold" aria-hidden="true"><i>11%</i></span>
+            </div>
+            <p class="note">
+              This demonstration uses an 11% threshold. A low sample error rate does not prove
+              real-world security.
+            </p>
+          </div>
+
+          <div class="verdict">
+            <h3 id="verificationTitle">Verification pending</h3>
+            <p id="verificationMessage" aria-live="polite">Generate a key to begin verification.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="band" aria-hidden="true"><div id="velocityB"></div></section>
+
+    <!-- ============ CHAPTER 5: VAULT ============ -->
+    <section class="chapter" id="vault">
+      <div class="ascii-bg ascii-vault" id="asciiB" aria-hidden="true"></div>
+      <div class="chapter-copy">
+        <p class="eyebrow"><strong>Formulation vault</strong><span>Chapter 5 of 5</span></p>
+        <h2 class="h2" data-split="reveal">Can the formulation travel now?</h2>
+        <p>
+          A verified key is hashed to a 256-bit AES key and used to encrypt your data with AES-GCM.
+          Without a verified key, the vault stays locked.
+        </p>
+        <p class="chapter-next">Run it again with a counterfeiter on the line and watch the lock hold.</p>
+      </div>
+
+      <div class="chapter-body">
+        <div class="bay vault" id="vaultPanel" data-locked="true">
+          <div class="vault-state" id="vaultState" role="status">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4" class="shackle"/></svg>
+            <span id="vaultStateText">Locked. Waiting for a verified key.</span>
+          </div>
+
+          <label for="pharmaData">Formulation data</label>
+          <textarea id="pharmaData" rows="5"
+            placeholder="e.g. Compound X-204, 50 mg tablet. Excipients: microcrystalline cellulose, croscarmellose sodium. Process: wet granulation, 45 min."></textarea>
+          <button class="btn btn-text" id="sampleBtn" type="button">Use a sample formulation</button>
+
+          <div class="pharma-actions">
+            <button id="encryptBtn" class="btn btn-solid" type="button">Encrypt data</button>
+            <button id="decryptBtn" class="btn btn-outline" type="button" disabled>Decrypt data</button>
+          </div>
+
+          <h3>Encrypted data</h3>
+          <div class="data" id="encryptedData" tabindex="0" role="region" aria-label="Encrypted data">No data encrypted yet.</div>
+
+          <h3>Decrypted data</h3>
+          <div class="data" id="decryptedData" tabindex="0" role="region" aria-label="Decrypted data">No data decrypted yet.</div>
+
+          <p id="pharmaStatus" class="pharma-status" aria-live="polite">Waiting for input.</p>
+        </div>
+
+        <details class="devtools">
+          <summary>Preview the rejected-key screen</summary>
+          <!-- Separate UI test; does not alter the actual BB84 calculation -->
+          <p class="note">
+            Shows the rejected-key state with a displayed 100% mismatch. This is a UI test,
+            not a real simulation result.
+          </p>
+          <div class="test-actions">
+            <button id="previewMismatchButton" class="btn btn-outline" type="button">Preview 100% mismatch</button>
+            <button id="clearMismatchPreviewButton" class="btn btn-outline" type="button" disabled>Restore actual results</button>
+          </div>
+          <p class="note" id="uiTestStatus" aria-live="polite">UI test inactive.</p>
+        </details>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="ascii-bg ascii-foot" id="asciiC" aria-hidden="true"></div>
+    <div class="footer-inner">
+      <a class="footer-cta" href="#console">Run another transfer <span aria-hidden="true">&uarr;</span></a>
+      <p class="footer-brand">BB84 Rx</p>
+      <p class="footer-note">Educational simulation only. This project models BB84 in JavaScript, uses no quantum hardware, and does not establish real-world security on its own.</p>
+    </div>
+  </footer>
+
+  <script src="lab.js"></script>
+  <script src="plant.js"></script>
+  <script src="interceptor.js"></script>
+  <script src="script.js"></script>
+  <script src="aes.js"></script>
+  <script src="pharma.js"></script>
+  <script src="ui.js"></script>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+</html>
